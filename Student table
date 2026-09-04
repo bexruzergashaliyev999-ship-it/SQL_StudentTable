@@ -1,0 +1,124 @@
+import sqlite3
+
+connection = sqlite3.connect("maktab.db")
+cursor = connection.cursor()
+
+
+def jadval_yaratish(cursor):
+    cursor.execute(""" CREATE TABLE IF NOT EXISTS talabalar(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        ism TEXT NOT NULL,
+        familiya TEXT NOT NULL,
+        yosh INTEGER NOT NULL CHECK(yosh > 6 AND yosh < 18),
+        fan TEXT NOT NULL,
+        baho INTEGER NOT NULL CHECK(baho BETWEEN 1 AND 5)
+    ) """)
+    connection.commit()
+    print("Jadval yaratildi!")
+
+    
+
+# def talaba_qoshish(cursor, ism, familiya, yosh, fan, baho):                              # it can insert only one student or one by one 
+#     cursor.execute("""INSERT INTO talabalar(ism, familiya, yosh, fan, baho)
+#     VALUES(?,?,?,?,?)""", (ism, familiya, yosh, fan, baho))
+#     print("Talaba qo'shildi!")
+
+
+def talabalar_qoshish(cursor):
+    cursor.execute("SELECT COUNT(*) FROM talabalar")
+    talabalar_soni = cursor.fetchone()[0]
+    if talabalar_soni < 10:
+        ism = input("Talabaning ismi: ")
+        familya = input("Talabaning familyasi: ")
+        yosh = int(input("Talabaning yoshi : "))
+        fan  = input("Talabani fani: ")
+        baholar = int(input("Talabaning bahosi: "))
+        cursor.execute('''
+        INSERT INTO talabalar(ism, familya, yosh, fan, baholar) VALUES (?,?,?,?,?)
+        ''', (ism,familya,yosh,fan,baholar) )
+        connection.commit()
+        print("Talaba qoshildi !")
+
+
+def top_student(cursor):
+    cursor.execute(''' 
+        SELECT * FROM talabalar ORDER BY baho DESC LIMIT 1
+    ''')
+    student = cursor.fetchone()
+    if student:
+        print("Eng yuqori baho olgan talaba:", student)
+        for s in student:
+            print(s)
+    else: 
+        print("talaba yoq")
+
+
+
+def bad_students(cursor):
+    cursor.execute(''' 
+        SELECT * FROM talabalar ORDER BY baho ASC LIMIT 1
+    ''')
+    student = cursor.fetchone()
+    if student:
+        print("Eng pas baho olgan talaba:", student)
+
+    else:
+        print("talaab yoq")
+
+
+def search_student(cursor):
+    ism_qidiruv = input("Qidirilayotgan talaba ismi: ")
+    cursor.execute(
+        """
+        SELECT * FROM talabalar WHERE ism LIKE ?
+    """,
+        (f"{ism_qidiruv}",)
+    )
+    students = cursor.fetchone()
+    if students:
+        print("Topildi Talaba: ")
+        
+    else:
+        print("Bunday ismli talaba yoq ")
+
+
+# def main():
+#     cursor = connection.cursor()                                              # you can use this without loop
+#     jadval_yaratish(cursor)
+#     # talaba_qoshish(cursor, "Ali", "Valiyev", 12, "Matematika", 4)
+#     talabalar_qoshish(cursor)
+#     connection.commit()
+#     connection.close()
+
+
+def main():
+    jadval_yaratish(cursor)
+
+    while True:
+        print("\n1 - Talaba qoshmoqchimisiz?")
+        print("2 - Top talabalar")
+        print("3 - Eng yomon talabalar")
+        print("4 - Talaba qidirish (ism bilan)")
+        print("5 - Chiqish")
+
+        choice = input("Tanlov: ")
+
+        if choice == "1":
+            talabalar_qoshish(cursor)
+        elif choice == "2":
+            top_student(cursor)
+        elif choice == "3":
+            bad_students(cursor)
+        elif choice == "4":
+            search_student(cursor)
+        elif choice == "5":
+            print(" TUGADI ")
+            break
+        else:
+            print("BOR NARSANI TANLA AXMOQ")
+
+    connection.close()  
+
+
+if __name__ == "__main__":
+    main()
